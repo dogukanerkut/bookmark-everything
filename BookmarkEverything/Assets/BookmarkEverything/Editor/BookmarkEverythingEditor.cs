@@ -259,6 +259,11 @@ namespace BookmarkEverything
                         List<EntryData> allowedList = new List<EntryData>();
                         foreach (UnityEngine.Object draggedObject in DragAndDrop.objectReferences)
                         {
+                            if(!AssetDatabase.Contains(draggedObject))
+                            {
+                                EditorUtility.DisplayDialog("Hierarchy Not Supported", "Objects from hierarchy is not supported for now. Would you like me to add that? Please e-mail me at dogukanerkut@gmail.com.\n Or you know, you can hack through the codes and add it yourself, but I do not recommend that. Anyway, this was a way long message then it's supposed to, I guess I like talking people through annoying display dialogs of Unity(really hate them for some reason).", "Okay, chill dude.");
+                                return;
+                            }
                             EntryData entryData = new EntryData(draggedObject);
                             if (_tempLocations.Contains(entryData, new EntryDataGUIDComparer()))
                             {
