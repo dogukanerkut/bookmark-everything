@@ -183,6 +183,7 @@ namespace BookmarkEverything
         private void OnEnable() {
             titleContent =RetrieveGUIContent("Bookmark", "CustomSorting");
             _defaultGUIColor = GUI.color;
+            minSize = new Vector2(400,400);
         }
 
         public void InitInternal()
