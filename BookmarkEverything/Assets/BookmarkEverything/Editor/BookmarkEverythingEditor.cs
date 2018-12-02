@@ -227,6 +227,10 @@ namespace BookmarkEverything
             {
                 this.Close();
             }
+            else if(!_autoClose && _reachedToAsset)
+            {
+                _reachedToAsset = false;
+            }
         }
         public void DropAreaGUI()
         {
