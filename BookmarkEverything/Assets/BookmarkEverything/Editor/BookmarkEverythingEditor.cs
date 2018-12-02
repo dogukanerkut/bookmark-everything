@@ -626,6 +626,9 @@ namespace BookmarkEverything
                 case ButtonTypes.Big:
                     options = new GUILayoutOption[] { GUILayout.MaxHeight(_bigButtonMaxHeight) };
                     break;
+                    case ButtonTypes.SmallLongHeight:
+                    options = new GUILayoutOption[]{ GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f)), GUILayout.MaxWidth(25) };
+                    break;
                 default:
                     break;
             }
@@ -719,7 +722,8 @@ namespace BookmarkEverything
         }
         private bool _reachedToAsset;
         Vector2 _projectFinderEntriesScroll;
-        int _objectIndexTobeRemoved = -1;
+        int _objectIndexToBeRemovedDueToDeletedAsset = -1;
+        int _objectIndexToBeRemoved = -1;
         private void DrawProjectFinderEntries(string category)
         {
             _projectFinderEntriesScroll = EditorGUILayout.BeginScrollView(_projectFinderEntriesScroll, _scrollViewStyle, GUILayout.MaxHeight(position.height));
@@ -730,6 +734,7 @@ namespace BookmarkEverything
                 if (_currentSettings.EntryData[i].Category == category)
                 {
                     GUIContent content = exists ? ContentWithIcon(GetLastNameFromPath(path), path) : RetrieveGUIContent(GetLastNameFromPath(path) + "(File is removed, click to remove)" , "console.erroricon.sml");
+                   EditorGUILayout.BeginHorizontal();
                     if (GUILayout.Button(content, _buttonStyle, GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f))))
                     {
                         if (exists)
@@ -759,16 +764,30 @@ namespace BookmarkEverything
                         }
                         else
                         {
-                            _objectIndexTobeRemoved = i;
+                            _objectIndexToBeRemovedDueToDeletedAsset = i;
                         }
                         _reachedToAsset = true;
                     }
+                    if (DrawButton("", "ol minus", ButtonTypes.SmallLongHeight))
+                    {
+                        _objectIndexToBeRemoved = i;
+                    }
+                   EditorGUILayout.EndHorizontal();
+
+
                 }
+
             }
-            if (_objectIndexTobeRemoved != -1)
+            if (_objectIndexToBeRemovedDueToDeletedAsset != -1)
             {
-                _tempLocations.RemoveAt(_objectIndexTobeRemoved);
-                _objectIndexTobeRemoved = -1;
+                _tempLocations.RemoveAt(_objectIndexToBeRemovedDueToDeletedAsset);
+                _objectIndexToBeRemovedDueToDeletedAsset = -1;
+                SaveChanges();
+            }
+            if(_objectIndexToBeRemoved != -1)
+            {
+                 _tempLocations.RemoveAt(_objectIndexToBeRemoved);
+                _objectIndexToBeRemoved = -1;
                 SaveChanges();
             }
             EditorGUILayout.EndScrollView();
@@ -1034,6 +1053,7 @@ public enum ButtonTypes
 {
     Standard,
     Big
+    SmallLongHeight,
 }
 public enum PingTypes
 {
