@@ -17,7 +17,7 @@ namespace BookmarkEverything
         private bool _initialized;
         private const char CHAR_SEPERATOR = ':';
         List<EntryData> _tempLocations = new List<EntryData>();
-        private const string SETTINGS_FILENAME = "projectutilitysettings";
+        private const string SETTINGS_FILENAME = "bookmarkeverythingsettings";
         private const string CATEGORY_SCENE = "Scenes";
         private const string CATEGORY_PREFAB = "Prefabs";
         private const string CATEGORY_SCRIPT = "Scripts";
