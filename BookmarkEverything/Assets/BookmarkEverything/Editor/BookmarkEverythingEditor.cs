@@ -95,13 +95,16 @@ namespace BookmarkEverything
             public PingTypes PingType;
             public bool VisualMode;
             public bool AutoClose;
-
-            public SaveData(List<EntryData> entryData, PingTypes pingType, bool visualMode, bool autoClose)
+            public bool ShowFullPath;
+            public bool ShowFullPathForFolders = true;
+            public SaveData(List<EntryData> entryData, PingTypes pingType, bool visualMode, bool autoClose, bool showFullPath, bool showFullPathForFolders)
             {
                 EntryData = entryData;
                 PingType = pingType;
                 VisualMode = visualMode;
                 AutoClose = autoClose;
+                ShowFullPath = showFullPath;
+                ShowFullPathForFolders = showFullPathForFolders;
             }
             public SaveData() { }
 
@@ -119,6 +122,7 @@ namespace BookmarkEverything
         GUIStyle _boxStyle;
         GUIStyle _popupStyle;
         GUIStyle _toolbarButtonStyle;
+        GUIStyle _boldLabelStyle;
 
         Texture _editorWindowBackground;
         #endregion
@@ -129,6 +133,8 @@ namespace BookmarkEverything
         private PingTypes _pingType;
         private bool _visualMode;
         private bool _autoClose;
+        private bool _showFullPath;
+        private bool _showFullPathForFolder;
 
         [MenuItem("Window/Bookmark Everything %h")]
         private static void Init()
@@ -269,7 +275,7 @@ namespace BookmarkEverything
                             sb.Append("\n");
                             for (int i = 0; i < duplicateList.Count; i++)
                             {
-                                sb.Append(string.Format("{0} in {1} Category\n",  GetLastNameFromPath(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
+                                sb.Append(string.Format("{0} in {1} Category\n",  GetNameForFile(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
                             }
 
                             if (EditorUtility.DisplayDialog("Duplicate Entries", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
@@ -365,6 +371,8 @@ namespace BookmarkEverything
             _visualMode = _currentSettings.VisualMode;
             VisualMode(_visualMode);
             _autoClose = _currentSettings.AutoClose;
+            _showFullPath = _currentSettings.ShowFullPath;
+            _showFullPathForFolder = _currentSettings.ShowFullPathForFolders;
         }
 
         #endregion
@@ -375,8 +383,21 @@ namespace BookmarkEverything
         {
             return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(s);
         }
-        private string GetLastNameFromPath(string path)
+        private string GetNameForFile(string path)
         {
+            if (_currentSettings.ShowFullPath)
+            {
+                return path;
+            }
+            string[] s = path.Split('/');
+            return s[s.Length - 1];
+        }
+        private string GetNameForFolder(string path)
+        {
+            if (_currentSettings.ShowFullPathForFolders)
+            {
+                return path;
+            }
             string[] s = path.Split('/');
             return s[s.Length - 1];
         }
@@ -490,6 +511,8 @@ namespace BookmarkEverything
 
         private void VisualMode(bool visualMode)
         {
+            _boldLabelStyle = new GUIStyle(EditorStyles.boldLabel);
+
             if (visualMode)
             {
                 _buttonStyle = new GUIStyle(EditorStyles.miniButton);
@@ -691,11 +714,14 @@ namespace BookmarkEverything
             }
         }
         private int _projectFinderTabIndex = 0;
-        private bool _projectFinderSettingsFoldout;
         private bool _visualModeChanged;
         private bool _controlVisualMode;
         private bool _controlAutoClose;
         private bool _autoCloseChanged;
+        private bool _controlShowFullPath;
+        private bool _showFullPathChanged;
+        private bool _controlShowFullPathForFolder;
+        private bool _showFullPathForFolderChanged;
         private void DrawProjectFinder()
         {
             _projectFinderTabIndex = GUILayout.Toolbar(_projectFinderTabIndex, _projectFinderContents.ToArray(), _toolbarButtonStyle, GUILayout.ExpandHeight(false));
@@ -732,11 +758,20 @@ namespace BookmarkEverything
             _projectFinderEntriesScroll = EditorGUILayout.BeginScrollView(_projectFinderEntriesScroll, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             for (int i = 0; i < _currentSettings.EntryData.Count; i++)
             {
-                string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].GUID);
-                bool exists = IOHelper.Exists(path);
                 if (_currentSettings.EntryData[i].Category == category)
                 {
-                    GUIContent content = exists ? ContentWithIcon(GetLastNameFromPath(path), path) : RetrieveGUIContent(GetLastNameFromPath(path) + "(File is removed, click to remove)" , "console.erroricon.sml");
+                    string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].GUID);
+                    bool exists = IOHelper.Exists(path);
+                    bool isFolder = IOHelper.IsFolder(path);
+                    GUIContent content;
+                    if (exists)
+                    {
+                        content = ContentWithIcon(isFolder ? GetNameForFolder(path) : GetNameForFile(path), path);
+                    }
+                    else
+                    {
+                        content = RetrieveGUIContent((isFolder ? GetNameForFolder(path) : GetNameForFile(path)) + "(File is removed, click to remove)" , "console.erroricon.sml");
+                    }
                    EditorGUILayout.BeginHorizontal();
                     if (GUILayout.Button(content, _buttonStyle, GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f))))
                     {
@@ -803,10 +838,14 @@ namespace BookmarkEverything
         Color _defaultGUIColor;
         private void DrawSettings()
         {
+            DrawInnerSettings();
+
             int toBeRemoved = -1;
             UnityEngine.Object pingedObject = null;
             _settingScrollPos = EditorGUILayout.BeginScrollView(_settingScrollPos, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             //Iterate all found entries - key is path value is type
+            EditorGUILayout.BeginVertical(_boxStyle);
+            EditorGUILayout.LabelField("Entry Arrangements", _boldLabelStyle);
             for (int i = 0; i < _tempLocations.Count; i++)
             {
                 bool exists = IOHelper.Exists(_tempLocations[i].GUID, ExistentialCheckStrategy.GUID);
@@ -854,7 +893,7 @@ namespace BookmarkEverything
                     // }
                     //çatecori
                     ///*int categoryIndex*/ = GetIndexOfCategory(_tempPlayerPrefLocations[i].Category);
-                    _tempLocations[i].Index = EditorGUILayout.Popup(_tempLocations[i].Index, RetrieveGUIContent(_projectFinderHeaders), _popupStyle, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight));
+                    _tempLocations[i].Index = EditorGUILayout.Popup(_tempLocations[i].Index, RetrieveGUIContent(_projectFinderHeaders), _popupStyle, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight), GUILayout.MaxWidth(150));
 
                     _tempLocations[i].Category = _projectFinderHeaders[_tempLocations[i].Index];
                    
@@ -879,8 +918,8 @@ namespace BookmarkEverything
                     GUI.color = _defaultGUIColor;
                 }
             }//endfor
+            EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
-            DrawInnerSettings();
 
             //Focus to Project window if a ping object is selected. Causes an error if it is directly made within the for loop
             if (pingedObject != null)
@@ -962,13 +1001,11 @@ namespace BookmarkEverything
 
         private void DrawInnerSettings()
         {
-            _projectFinderSettingsFoldout = EditorGUILayout.Foldout(_projectFinderSettingsFoldout, "Settings");
-            if (_projectFinderSettingsFoldout)
-            {
-                EditorGUILayout.BeginVertical();
-                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.BeginVertical(_boxStyle);
+            EditorGUILayout.LabelField("General Settings", _boldLabelStyle);
+            EditorGUILayout.BeginHorizontal();
                 string label = "Current Ping Type : ";
-                EditorGUILayout.LabelField(label, GUILayout.MaxWidth(label.Length * 6));
+                EditorGUILayout.LabelField(label, GUILayout.MaxWidth(label.Length * 7.3f));
                 if (_pingType == PingTypes.Ping)
                 {
                     if (GUILayout.Button("Ping", _buttonStyle, GUILayout.ExpandWidth(false)))
@@ -1014,6 +1051,44 @@ namespace BookmarkEverything
                 }
                 EditorGUILayout.EndHorizontal();
 
+
+
+                EditorGUILayout.BeginHorizontal();
+                label = "Show Full Path : ";
+                _controlShowFullPath = _showFullPath;
+                _showFullPath = EditorGUILayout.Toggle(label, _showFullPath);
+
+                if (_controlShowFullPath != _showFullPath)
+                {
+                    _showFullPathChanged = true;
+                }
+                if (_showFullPathChanged)
+                {
+                    _currentSettings.ShowFullPath = _showFullPath;
+                    _currentSettings.Save();
+                    _showFullPathChanged = false;
+                }
+                
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                label = "Show Full Path(Folders) : ";
+                _controlShowFullPathForFolder = _showFullPathForFolder;
+                _showFullPathForFolder = EditorGUILayout.Toggle(label, _showFullPathForFolder);
+
+                if (_controlShowFullPathForFolder != _showFullPathForFolder)
+                {
+                    _showFullPathForFolderChanged = true;
+                }
+                if (_showFullPathForFolderChanged)
+                {
+                    _currentSettings.ShowFullPathForFolders = _showFullPathForFolder;
+                    _currentSettings.Save();
+                    _showFullPathForFolderChanged = false;
+                }
+
+                EditorGUILayout.EndHorizontal();
+
                 EditorGUILayout.BeginHorizontal();
 
                 label = "Visual Mode(Experimental!) : ";
@@ -1035,9 +1110,6 @@ namespace BookmarkEverything
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.EndVertical();
-
-
-            }
         }
     }
 }
