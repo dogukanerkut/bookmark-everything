@@ -12,7 +12,7 @@ namespace BookmarkEverything
 {
     public class BookmarkEverythingEditor : EditorWindow
     {
-        private Settings _currentSettings = new Settings();
+        private SaveData _currentSettings = new SaveData();
 
         private bool _initialized;
         private const char CHAR_SEPERATOR = ':';
@@ -85,21 +85,21 @@ namespace BookmarkEverything
         }
 
         [System.Serializable]
-        public class Settings
+        public class SaveData
         {
             public List<EntryData> EntryData = new List<EntryData>();
             public PingTypes PingType;
             public bool VisualMode;
             public bool AutoClose;
 
-            public Settings(List<EntryData> entryData, PingTypes pingType, bool visualMode, bool autoClose)
+            public SaveData(List<EntryData> entryData, PingTypes pingType, bool visualMode, bool autoClose)
             {
                 EntryData = entryData;
                 PingType = pingType;
                 VisualMode = visualMode;
                 AutoClose = autoClose;
             }
-            public Settings() { }
+            public SaveData() { }
 
             public void Save()
             {
@@ -268,11 +268,11 @@ namespace BookmarkEverything
         private void LoadSettings()
         {
             //attempt to load the entries
-            _currentSettings = IOHelper.ReadFromDisk<Settings>(SETTINGS_FILENAME);
+            _currentSettings = IOHelper.ReadFromDisk<SaveData>(SETTINGS_FILENAME);
             //if nothing is saved, retrieve the default values
             if (_currentSettings == null)
             {
-                _currentSettings = new Settings();
+                _currentSettings = new SaveData();
                 //_currentSettings.EntryData.Add(new EntryData(scenesPath, CATEGORY_SCENE, GetIndexOfCategory(CATEGORY_SCENE)));
                 //_currentSettings.EntryData.Add(new EntryData(prefabsPath, CATEGORY_PREFAB, GetIndexOfCategory(CATEGORY_PREFAB)));
                 //_currentSettings.EntryData.Add(new EntryData(scriptsPath, CATEGORY_SCRIPT, GetIndexOfCategory(CATEGORY_SCRIPT)));
