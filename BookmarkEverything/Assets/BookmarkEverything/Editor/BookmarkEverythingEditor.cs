@@ -835,20 +835,20 @@ namespace BookmarkEverything
                         EditorGUIUtility.PingObject(pingedObject);
                     }
 
-                    if (DrawButton("Assign Selected Object", "TimeLinePingPong", ButtonTypes.Standard))
-                    {
-                        string s = AssetDatabase.GetAssetPath(Selection.activeObject);
-                        if (s == "" || s == null || Selection.activeObject == null)
-                        {
-                            EditorUtility.DisplayDialog("Empty Selection", "Please select an item from Project Hierarchy.", "Okay");
-                        }
-                        else
-                        {
-                            _tempLocations[i] = Selection.activeObject;
-                            _changesMade = true;
-                        }
-                        GUI.FocusControl(null);
-                    }
+                    // if (DrawButton("Assign Selected Object", "TimeLinePingPong", ButtonTypes.Standard))
+                    // {
+                    //     string s = AssetDatabase.GetAssetPath(Selection.activeObject);
+                    //     if (s == "" || s == null || Selection.activeObject == null)
+                    //     {
+                    //         EditorUtility.DisplayDialog("Empty Selection", "Please select an item from Project Hierarchy.", "Okay");
+                    //     }
+                    //     else
+                    //     {
+                    //         _tempLocations[i] = Selection.activeObject;
+                    //         _changesMade = true;
+                    //     }
+                    //     GUI.FocusControl(null);
+                    // }
                     //çatecori
                     ///*int categoryIndex*/ = GetIndexOfCategory(_tempPlayerPrefLocations[i].Category);
                     _tempLocations[i].Index = EditorGUILayout.Popup(_tempLocations[i].Index, RetrieveGUIContent(_projectFinderHeaders), _popupStyle, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight));
