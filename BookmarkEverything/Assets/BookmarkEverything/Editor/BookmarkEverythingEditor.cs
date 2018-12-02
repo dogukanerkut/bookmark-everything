@@ -272,10 +272,10 @@ namespace BookmarkEverything
                         if(duplicateList.Count > 0)
                         {
                             StringBuilder sb = new StringBuilder();
-                            sb.Append("\n");
+                            sb.Append("\n\n");
                             for (int i = 0; i < duplicateList.Count; i++)
                             {
-                                sb.Append(string.Format("{0} in {1} Category\n",  GetNameForFile(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
+                                sb.Append(string.Format("{0} in {1} Category\n\n",  GetNameForFile(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
                             }
 
                             if (EditorUtility.DisplayDialog("Duplicate Entries", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
@@ -718,6 +718,21 @@ namespace BookmarkEverything
         private void DrawHeader()
         {
             _tabIndex = GUILayout.Toolbar(_tabIndex, _headerContents.ToArray());
+            if (_tabIndex == 0 && _changesMade)
+            {
+                    bool save = EditorUtility.DisplayDialog("Unsaved Changes", "You have unsaved changes. Would you like to save them?", "Yes", "No");
+                    if (save)
+                    {
+                        SaveChanges();
+                    }
+                    else
+                    {
+                        _lastlyAddedCount = -1;
+                        _tempLocations.Clear();
+                        _tempLocations.AddRange(EntryData.Clone(_currentSettings.EntryData.ToArray()));
+                        _changesMade = false;
+                    }
+            }
             switch (_tabIndex)
             {
                 case 0:
@@ -845,8 +860,12 @@ namespace BookmarkEverything
                 _objectIndexToBeRemoved = -1;
                 SaveChanges();
             }
+             if (_currentSettings.EntryData.Count == 0)
+            {
+                EditorGUILayout.LabelField("You can Drag&Drop assets from Project Folder and easily access them here.", _boldLabelStyle);
+            }
             EditorGUILayout.EndScrollView();
-
+           
         }
 
         Vector2 _settingScrollPos;
@@ -862,7 +881,7 @@ namespace BookmarkEverything
             _settingScrollPos = EditorGUILayout.BeginScrollView(_settingScrollPos, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             //Iterate all found entries - key is path value is type
             EditorGUILayout.BeginVertical(_boxStyle);
-            EditorGUILayout.LabelField("Entry Arrangements", _boldLabelStyle);
+            EditorGUILayout.LabelField("Manage Registered Assets", _boldLabelStyle);
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             for (int i = 0; i < _tempLocations.Count; i++)
             {
@@ -948,6 +967,10 @@ namespace BookmarkEverything
                     GUI.color = _defaultGUIColor;
                 }
             }//endfor
+             if (_tempLocations.Count == 0 && _currentSettings.EntryData.Count == 0)
+            {
+                EditorGUILayout.LabelField("Start dragging some assets from Project Folder!", _boldLabelStyle);
+            }
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
 
@@ -978,11 +1001,7 @@ namespace BookmarkEverything
             // }
 
             //Save
-            if (DrawButton("Save", "redLight", ButtonTypes.Big))
-            {
-                _lastlyAddedCount = -1;
-                SaveChanges();
-            }
+           
             //detect if any change occured, if not reverse the HelpBox
             if (_currentSettings.EntryData.Count != _tempLocations.Count)
             {
@@ -1006,8 +1025,12 @@ namespace BookmarkEverything
             //Show info about saving
             if (_changesMade)
             {
+                if (DrawButton("Save", "redLight", ButtonTypes.Big))
+                {
+                    SaveChanges();
+                }
                 EditorGUILayout.HelpBox("Changes are made, you should save changes if you want to keep them.", MessageType.Info);
-                if (DrawButton("Revert Changes", "TimeLineLoop", ButtonTypes.Standard))
+                if (DrawButton("Discard Changes", "TimeLineLoop", ButtonTypes.Standard))
                 {
                     _lastlyAddedCount = -1;
                     _tempLocations.Clear();
@@ -1016,12 +1039,14 @@ namespace BookmarkEverything
                 }
 
             }
+           
         }
 
         private void SaveChanges()
         {
             _currentSettings.EntryData.Clear();
             _currentSettings.EntryData.AddRange(EntryData.Clone(_tempLocations.ToArray()));
+            _lastlyAddedCount = -1;
 
             _currentSettings.Save();
             _changesMade = false;
