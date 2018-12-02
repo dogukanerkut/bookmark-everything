@@ -27,19 +27,19 @@ namespace BookmarkEverything
         [System.Serializable]
         public class EntryData
         {
-            public string Path;
+            public string GUID;
             public string Category;
             public int Index;
 
             public EntryData(string path, string category, int index)
             {
-                Path = path;
+                GUID = path;
                 Category = category;
                 Index = index;
             }
             public EntryData(string path)
             {
-                Path = path;
+                GUID = path;
                 Category = "default";
             }
             public EntryData(UnityEngine.Object obj)
@@ -48,7 +48,7 @@ namespace BookmarkEverything
                 long localId;
                 AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out localId);
 
-                Path = guid;
+                GUID = guid;
                 if (obj.GetType() == typeof(DefaultAsset))
                 {
                     Category = "Folder";
@@ -61,7 +61,7 @@ namespace BookmarkEverything
             }
             public static EntryData Clone(EntryData data)
             {
-                return new EntryData(data.Path, data.Category, data.Index);
+                return new EntryData(data.GUID, data.Category, data.Index);
             }
             public static EntryData[] Clone(EntryData[] data)
             {
@@ -252,7 +252,7 @@ namespace BookmarkEverything
                             EntryData entryData = new EntryData(draggedObject);
                             if (_tempLocations.Contains(entryData, new EntryDataGUIDComparer()))
                             {
-                                duplicateList.Add(_tempLocations.Find((entry) => entry.Path == entryData.Path));
+                                duplicateList.Add(_tempLocations.Find((entry) => entry.GUID == entryData.GUID));
                             }
                             else
                             {
@@ -265,7 +265,7 @@ namespace BookmarkEverything
                             sb.Append("\n");
                             for (int i = 0; i < duplicateList.Count; i++)
                             {
-                                sb.Append(string.Format("{0} in {1} Category\n",  GetLastNameFromPath(AssetDatabase.GUIDToAssetPath(duplicateList[i].Path)), duplicateList[i].Category));
+                                sb.Append(string.Format("{0} in {1} Category\n",  GetLastNameFromPath(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
                             }
 
                             if (EditorUtility.DisplayDialog("Duplicate Entries", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
@@ -721,7 +721,7 @@ namespace BookmarkEverything
             _projectFinderEntriesScroll = EditorGUILayout.BeginScrollView(_projectFinderEntriesScroll, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             for (int i = 0; i < _currentSettings.EntryData.Count; i++)
             {
-                string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].Path);
+                string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].GUID);
                 bool exists = IOHelper.Exists(path);
                 if (_currentSettings.EntryData[i].Category == category)
                 {
@@ -783,7 +783,7 @@ namespace BookmarkEverything
             //Iterate all found entries - key is path value is type
             for (int i = 0; i < _tempLocations.Count; i++)
             {
-                bool exists = IOHelper.Exists(_tempLocations[i].Path, ExistentialCheckStrategy.GUID);
+                bool exists = IOHelper.Exists(_tempLocations[i].GUID, ExistentialCheckStrategy.GUID);
                 if (_lastlyAddedCount != -1 && i >= _tempLocations.Count - _lastlyAddedCount -1)
                 {
                     GUI.color = Color.green;
@@ -792,7 +792,7 @@ namespace BookmarkEverything
                 {
                     EditorGUILayout.BeginVertical();
                     {
-                        string fullPath = exists ? AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path) : "(Removed)" + AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path);
+                        string fullPath = exists ? AssetDatabase.GUIDToAssetPath(_tempLocations[i].GUID) : "(Removed)" + AssetDatabase.GUIDToAssetPath(_tempLocations[i].GUID);
                         GUILayout.Space(4);
                         EditorGUILayout.SelectableLabel(fullPath, _textFieldStyle, GUILayout.Height(EditorGUIUtility.singleLineHeight));
                     }
@@ -803,7 +803,7 @@ namespace BookmarkEverything
                     }
                     if (DrawButton("", "ViewToolOrbit", ButtonTypes.Standard))
                     {
-                        pingedObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path));
+                        pingedObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(_tempLocations[i].GUID));
                         if (Selection.activeObject)
                         {
                             Selection.activeObject = null;
@@ -897,7 +897,7 @@ namespace BookmarkEverything
             {
                 for (int i = 0; i < _currentSettings.EntryData.Count; i++)
                 {
-                    if (_currentSettings.EntryData[i].Path != _tempLocations[i].Path || _currentSettings.EntryData[i].Category != _tempLocations[i].Category)
+                    if (_currentSettings.EntryData[i].GUID != _tempLocations[i].GUID || _currentSettings.EntryData[i].Category != _tempLocations[i].Category)
                     {
                         _changesMade = true;
                         break;
