@@ -289,7 +289,7 @@ namespace BookmarkEverything
                         {
                             if(!AssetDatabase.Contains(draggedObject))
                             {
-                                EditorUtility.DisplayDialog("Hierarchy Not Supported", "Objects from hierarchy is not supported for now. Would you like me to add that? Please e-mail me at dogukanerkut@gmail.com.\n Or you know, you can hack through the codes and add it yourself, but I do not recommend that. Anyway, this was a way long message then it's supposed to, I guess I like talking people through annoying display dialogs of Unity(really hate them for some reason).", "Okay, chill dude.");
+                                EditorUtility.DisplayDialog("Bookmark Everything", "Objects from hierarchy is not supported for now. Would you like me to add that? Please e-mail me at dogukanerkut@gmail.com.\n Or you know, you can hack through the codes and add it yourself, but I do not recommend that. Anyway, this was a way long message then it's supposed to, I guess I like talking people through annoying display dialogs of Unity(really hate them for some reason).", "Okay, chill dude.");
                                 return;
                             }
                             EntryData entryData = new EntryData(draggedObject);
@@ -311,7 +311,7 @@ namespace BookmarkEverything
                                 sb.Append(string.Format("{0} in {1} Category\n\n",  GetNameForFile(AssetDatabase.GUIDToAssetPath(duplicateList[i].GUID)), duplicateList[i].Category));
                             }
 
-                            if (EditorUtility.DisplayDialog("Duplicate Entries", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
+                            if (EditorUtility.DisplayDialog("Bookmark Everything", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
                             {
                                 duplicateList.AddRange(allowedList);
                                 for (int i = 0; i < duplicateList.Count; i++)
@@ -753,7 +753,7 @@ namespace BookmarkEverything
             _tabIndex = GUILayout.Toolbar(_tabIndex, _headerContents.ToArray());
             if (_tabIndex == 0 && _changesMade)
             {
-                    bool save = EditorUtility.DisplayDialog("Unsaved Changes", "You have unsaved changes. Would you like to save them?", "Yes", "No");
+                    bool save = EditorUtility.DisplayDialog("Bookmark Everything", "You have unsaved changes. Would you like to save them?", "Yes", "No");
                     if (save)
                     {
                         SaveChanges();
