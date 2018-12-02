@@ -126,20 +126,24 @@ namespace BookmarkEverything
         private bool _visualMode;
         private bool _autoClose;
 
-        [MenuItem("CriticalShot/Project Utility %h")]
+        [MenuItem("Window/Bookmark Everything %h")]
         private static void Init()
         {
-
             var windows = (BookmarkEverythingEditor[])Resources.FindObjectsOfTypeAll(typeof(BookmarkEverythingEditor));
             if (windows.Length == 0)
             {
                 BookmarkEverythingEditor window = (BookmarkEverythingEditor)GetWindow(typeof(BookmarkEverythingEditor));
                 window.InitInternal();
+                
             }
             else
             {
                 FocusWindowIfItsOpen(typeof(BookmarkEverythingEditor));
             }
+        }
+
+        private void OnEnable() {
+            titleContent =RetrieveGUIContent("Bookmark", "UnityEditor.SceneHierarchyWindow");
         }
 
         public void InitInternal()
