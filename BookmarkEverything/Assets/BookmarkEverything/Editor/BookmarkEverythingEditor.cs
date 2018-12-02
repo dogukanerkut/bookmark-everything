@@ -629,6 +629,9 @@ namespace BookmarkEverything
                     case ButtonTypes.SmallLongHeight:
                     options = new GUILayoutOption[]{ GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f)), GUILayout.MaxWidth(25) };
                     break;
+                    case ButtonTypes.SmallNormalHeight:
+                    options = new GUILayoutOption[] { GUILayout.MaxHeight(_standardButtonMaxHeight), GUILayout.MaxWidth(25) };
+                    break;
                 default:
                     break;
             }
@@ -824,7 +827,7 @@ namespace BookmarkEverything
                     {
                         GUI.enabled = false;
                     }
-                    if (DrawButton("", "ViewToolOrbit", ButtonTypes.Standard))
+                    if (DrawButton("", "ViewToolOrbit", ButtonTypes.SmallNormalHeight))
                     {
                         pingedObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(_tempLocations[i].GUID));
                         if (Selection.activeObject)
@@ -860,7 +863,7 @@ namespace BookmarkEverything
                         GUI.enabled = true;
                     }
                     //Remove Button
-                    if (DrawButton("", "ol minus", ButtonTypes.Standard))
+                    if (DrawButton("", "ol minus", ButtonTypes.SmallNormalHeight))
                     {
                         if(_lastlyAddedCount != -1 && i >= _tempLocations.Count - _lastlyAddedCount -1)
                         {
@@ -949,8 +952,6 @@ namespace BookmarkEverything
         {
             _currentSettings.EntryData.Clear();
             _currentSettings.EntryData.AddRange(EntryData.Clone(_tempLocations.ToArray()));
-            //PlayerPrefs.SetString(PLAYERPREF_PATH, MergeStrings(_currentSettings.EntryData.Select(item => item.Path).ToArray()));
-            //PlayerPrefs.SetString(PLAYERPREF_TYPE, MergeStrings(_currentSettings.EntryData.Select(item => item.Category).ToArray()));
 
             _currentSettings.Save();
             _changesMade = false;
@@ -1016,7 +1017,6 @@ namespace BookmarkEverything
                 EditorGUILayout.BeginHorizontal();
 
                 label = "Visual Mode(Experimental!) : ";
-                //EditorGUILayout.LabelField(label, GUILayout.MaxWidth(label.Length * 6));
                 _controlVisualMode = _visualMode;
                 _visualMode = EditorGUILayout.Toggle(label, _visualMode);
 
@@ -1052,8 +1052,9 @@ public enum MainHeaders
 public enum ButtonTypes
 {
     Standard,
-    Big
+    Big,
     SmallLongHeight,
+    SmallNormalHeight
 }
 public enum PingTypes
 {
