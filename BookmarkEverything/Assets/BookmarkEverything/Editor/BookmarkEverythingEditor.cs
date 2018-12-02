@@ -139,6 +139,7 @@ namespace BookmarkEverything
                 BookmarkEverythingEditor window = (BookmarkEverythingEditor)GetWindow(typeof(BookmarkEverythingEditor));
                 window.InitInternal();
                 
+
             }
             else
             {
@@ -148,6 +149,7 @@ namespace BookmarkEverything
 
         private void OnEnable() {
             titleContent =RetrieveGUIContent("Bookmark", "CustomSorting");
+            _defaultGUIColor = GUI.color;
         }
 
         public void InitInternal()
@@ -243,22 +245,95 @@ namespace BookmarkEverything
                     if (evt.type == EventType.DragPerform)
                     {
                         DragAndDrop.AcceptDrag();
-
+                        List<EntryData> duplicateList = new List<EntryData>();
+                        List<EntryData> allowedList = new List<EntryData>();
                         foreach (UnityEngine.Object draggedObject in DragAndDrop.objectReferences)
                         {
                             EntryData entryData = new EntryData(draggedObject);
-                            if (_tabIndex == 0)
+                            if (_tempLocations.Contains(entryData, new EntryDataGUIDComparer()))
                             {
-                                entryData.Category = GetNameOfCategory(_projectFinderTabIndex);
-                                entryData.Index = _projectFinderTabIndex;
+                                duplicateList.Add(_tempLocations.Find((entry) => entry.Path == entryData.Path));
                             }
-                            else if (_tabIndex == 1)
+                            else
                             {
-                                entryData.Category = GetNameOfCategory(0);
-                                entryData.Index = 0;
+                                allowedList.Add(entryData);
                             }
-                            _tempLocations.Add(entryData);
+                        }
+                        if(duplicateList.Count > 0)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append("\n");
+                            for (int i = 0; i < duplicateList.Count; i++)
+                            {
+                                sb.Append(string.Format("{0} in {1} Category\n",  GetLastNameFromPath(AssetDatabase.GUIDToAssetPath(duplicateList[i].Path)), duplicateList[i].Category));
+                            }
+
+                            if (EditorUtility.DisplayDialog("Duplicate Entries", string.Format("Duplicate Entries Found: {0} Would you still like to add them ?(Non-duplicates will be added anyway)", sb.ToString()), "Yes", "No"))
+                            {
+                                duplicateList.AddRange(allowedList);
+                                for (int i = 0; i < duplicateList.Count; i++)
+                                {
+                                    if (_tabIndex == 0)
+                                    {
+                                        duplicateList[i].Category = GetNameOfCategory(_projectFinderTabIndex);
+                                        duplicateList[i].Index = _projectFinderTabIndex;
+                                    }
+                                    else if (_tabIndex == 1)
+                                    {
+                                        duplicateList[i].Category = GetNameOfCategory(0);
+                                        duplicateList[i].Index = 0;
+                                        _lastlyAddedCount++;
+
+                                    }
+                                }
+                                _tempLocations.AddRange(duplicateList);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < allowedList.Count; i++)
+                                {
+                                    if (_tabIndex == 0)
+                                    {
+                                        allowedList[i].Category = GetNameOfCategory(_projectFinderTabIndex);
+                                        allowedList[i].Index = _projectFinderTabIndex;
+                                    }
+                                    else if (_tabIndex == 1)
+                                    {
+                                        allowedList[i].Category = GetNameOfCategory(0);
+                                        allowedList[i].Index = 0;
+                                        _lastlyAddedCount++;
+                                    }
+                                }
+                                _tempLocations.AddRange(allowedList);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < allowedList.Count; i++)
+                            {
+                                if (_tabIndex == 0)
+                                {
+                                    allowedList[i].Category = GetNameOfCategory(_projectFinderTabIndex);
+                                    allowedList[i].Index = _projectFinderTabIndex;
+                                }
+                                else if (_tabIndex == 1)
+                                {
+                                    allowedList[i].Category = GetNameOfCategory(0);
+                                    allowedList[i].Index = 0;
+                                    _lastlyAddedCount++;
+
+                                }
+                            }
+
+                            _tempLocations.AddRange(allowedList);
+                        }
+                        if (_tabIndex == 0)
+                        {
                             SaveChanges();
+                        }
+                        else if(_tabIndex == 1)
+                        {
+                            _changesMade = true;
                         }
                     }
                     break;
@@ -698,6 +773,8 @@ namespace BookmarkEverything
 
         Vector2 _settingScrollPos;
         bool _changesMade = false;
+        int _lastlyAddedCount = -1;
+        Color _defaultGUIColor;
         private void DrawSettings()
         {
             int toBeRemoved = -1;
@@ -707,6 +784,10 @@ namespace BookmarkEverything
             for (int i = 0; i < _tempLocations.Count; i++)
             {
                 bool exists = IOHelper.Exists(_tempLocations[i].Path, ExistentialCheckStrategy.GUID);
+                if (_lastlyAddedCount != -1 && i >= _tempLocations.Count - _lastlyAddedCount -1)
+                {
+                    GUI.color = Color.green;
+                }
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUILayout.BeginVertical();
@@ -758,14 +839,21 @@ namespace BookmarkEverything
                     //Remove Button
                     if (DrawButton("", "ol minus", ButtonTypes.Standard))
                     {
+                        if(_lastlyAddedCount != -1 && i >= _tempLocations.Count - _lastlyAddedCount -1)
+                        {
+                            _lastlyAddedCount--;
+                        }
                         toBeRemoved = i;
                     }
                 }
                 EditorGUILayout.EndHorizontal();
 
+                if (_lastlyAddedCount != -1 && i >= _tempLocations.Count - _lastlyAddedCount - 1)
+                {
+                    GUI.color = _defaultGUIColor;
+                }
             }//endfor
             EditorGUILayout.EndScrollView();
-
             DrawInnerSettings();
 
             //Focus to Project window if a ping object is selected. Causes an error if it is directly made within the for loop
@@ -781,23 +869,23 @@ namespace BookmarkEverything
             //--
             //Add
 
-            if (DrawButton("Add", "ol plus", ButtonTypes.Big))
-            {
-                if (Selection.activeObject != null)
-                {
-                    _tempLocations.Add(Selection.activeObject);
-                }
-                else
-                {
-                    _tempLocations.Add("Assets");
-
-                }
-                GUI.FocusControl(null);
-            }
+            // if (DrawButton("Add", "ol plus", ButtonTypes.Big))
+            // {
+            //     if (Selection.activeObject != null)
+            //     {
+            //         _tempLocations.Add(Selection.activeObject);
+            //     }
+            //     else
+            //     {
+            //         EditorUtility.DisplayDialog("Empty Selection", "Please select an item from Project Hierarchy.", "Okay");
+            //     }
+            //     GUI.FocusControl(null);
+            // }
 
             //Save
             if (DrawButton("Save", "redLight", ButtonTypes.Big))
             {
+                _lastlyAddedCount = -1;
                 SaveChanges();
             }
             //detect if any change occured, if not reverse the HelpBox
@@ -826,6 +914,7 @@ namespace BookmarkEverything
                 EditorGUILayout.HelpBox("Changes are made, you should save changes if you want to keep them.", MessageType.Info);
                 if (DrawButton("Revert Changes", "TimeLineLoop", ButtonTypes.Standard))
                 {
+                    _lastlyAddedCount = -1;
                     _tempLocations.Clear();
                     _tempLocations.AddRange(EntryData.Clone(_currentSettings.EntryData.ToArray()));
                 }
