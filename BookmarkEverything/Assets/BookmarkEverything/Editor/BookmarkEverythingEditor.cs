@@ -846,6 +846,7 @@ namespace BookmarkEverything
             //Iterate all found entries - key is path value is type
             EditorGUILayout.BeginVertical(_boxStyle);
             EditorGUILayout.LabelField("Entry Arrangements", _boldLabelStyle);
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             for (int i = 0; i < _tempLocations.Count; i++)
             {
                 bool exists = IOHelper.Exists(_tempLocations[i].GUID, ExistentialCheckStrategy.GUID);
@@ -874,7 +875,19 @@ namespace BookmarkEverything
                             Selection.activeObject = null;
                         }
 
-                        EditorGUIUtility.PingObject(pingedObject);
+                        if (_pingType == PingTypes.Ping)
+                            {
+                                EditorGUIUtility.PingObject(pingedObject);
+                            }
+                            else if (_pingType == PingTypes.Selection)
+                            {
+                                Selection.activeObject = pingedObject;
+                            }
+                            else if (_pingType == PingTypes.Both)
+                            {
+                                EditorGUIUtility.PingObject(pingedObject);
+                                Selection.activeObject = pingedObject;
+                            }
                     }
 
                     // if (DrawButton("Assign Selected Object", "TimeLinePingPong", ButtonTypes.Standard))
@@ -1003,6 +1016,7 @@ namespace BookmarkEverything
         {
                 EditorGUILayout.BeginVertical(_boxStyle);
             EditorGUILayout.LabelField("General Settings", _boldLabelStyle);
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.BeginHorizontal();
                 string label = "Current Ping Type : ";
                 EditorGUILayout.LabelField(label, GUILayout.MaxWidth(label.Length * 7.3f));
