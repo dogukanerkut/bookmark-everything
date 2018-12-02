@@ -44,7 +44,11 @@ namespace BookmarkEverything
             }
             public EntryData(UnityEngine.Object obj)
             {
-                Path = AssetDatabase.GetAssetPath(obj);
+                string guid = "";
+                long localId;
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out localId);
+
+                Path = guid;
                 if (obj.GetType() == typeof(DefaultAsset))
                 {
                     Category = "Folder";
@@ -273,9 +277,6 @@ namespace BookmarkEverything
             if (_currentSettings == null)
             {
                 _currentSettings = new SaveData();
-                //_currentSettings.EntryData.Add(new EntryData(scenesPath, CATEGORY_SCENE, GetIndexOfCategory(CATEGORY_SCENE)));
-                //_currentSettings.EntryData.Add(new EntryData(prefabsPath, CATEGORY_PREFAB, GetIndexOfCategory(CATEGORY_PREFAB)));
-                //_currentSettings.EntryData.Add(new EntryData(scriptsPath, CATEGORY_SCRIPT, GetIndexOfCategory(CATEGORY_SCRIPT)));
                 _currentSettings.PingType = PingTypes.Both;
                 _currentSettings.Save();
             }
@@ -368,9 +369,6 @@ namespace BookmarkEverything
                     return "UnityEditor.Graphs.AnimatorControllerTool";
                 case "Favorite":
                     return "Favorite";
-
-
-
 
                 default:
                     return "DefaultAsset Icon";
@@ -485,11 +483,10 @@ namespace BookmarkEverything
         /// <param name="iconName"></param>
         /// <param name="tooltip"></param>
         /// <returns></returns>
-        private GUIContent RetrieveGUIContent(string name, string iconName = "", string tooltip = "")
+        private GUIContent RetrieveGUIContent(string name, string iconName = "", string tooltip = "", bool useIconResolver = false)
         {
             if (iconName != null || iconName != "")
             {
-
                 GUIContent c = new GUIContent(EditorGUIUtility.IconContent(iconName));
                 c.text = name;
                 c.tooltip = tooltip;
@@ -643,43 +640,59 @@ namespace BookmarkEverything
         }
         private bool _reachedToAsset;
         Vector2 _projectFinderEntriesScroll;
+        int _objectIndexTobeRemoved = -1;
         private void DrawProjectFinderEntries(string category)
         {
             _projectFinderEntriesScroll = EditorGUILayout.BeginScrollView(_projectFinderEntriesScroll, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             for (int i = 0; i < _currentSettings.EntryData.Count; i++)
             {
+                string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].Path);
+                bool existsDir = Directory.Exists(path);
+                bool existsFile = File.Exists(path);
+                bool exists = existsDir || existsFile;
                 if (_currentSettings.EntryData[i].Category == category)
                 {
-                    if (GUILayout.Button(ContentWithIcon(GetLastNameFromPath(_currentSettings.EntryData[i].Path), _currentSettings.EntryData[i].Path), _buttonStyle, GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f))))
+                    GUIContent content = exists ? ContentWithIcon(GetLastNameFromPath(path), path) : RetrieveGUIContent(GetLastNameFromPath(path) + "(File is removed, click to remove)" , "console.erroricon.sml");
+                    if (GUILayout.Button(content, _buttonStyle, GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight + (EditorGUIUtility.singleLineHeight * .5f))))
                     {
-                        if (_pingType == PingTypes.Ping)
+                        if (exists)
                         {
-                            if (Selection.activeObject)
+                            if (_pingType == PingTypes.Ping)
                             {
-                                Selection.activeObject = null;
+                                if (Selection.activeObject)
+                                {
+                                    Selection.activeObject = null;
+                                }
+                                EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(path));
                             }
-
-                            EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(_currentSettings.EntryData[i].Path));
-                        }
-                        else if (_pingType == PingTypes.Selection)
-                        {
-                            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(_currentSettings.EntryData[i].Path);
-                        }
-                        else if (_pingType == PingTypes.Both)
-                        {
-                            if (Selection.activeObject)
+                            else if (_pingType == PingTypes.Selection)
                             {
-                                Selection.activeObject = null;
+                                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
                             }
-
-                            EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(_currentSettings.EntryData[i].Path));
-                            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(_currentSettings.EntryData[i].Path);
-
+                            else if (_pingType == PingTypes.Both)
+                            {
+                                if (Selection.activeObject)
+                                {
+                                    Selection.activeObject = null;
+                                }
+                                EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(path));
+                                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                            }
+                            EditorUtility.FocusProjectWindow();
                         }
-                        EditorUtility.FocusProjectWindow();
+                        else
+                        {
+                            _objectIndexTobeRemoved = i;
+                        }
                         _reachedToAsset = true;
                     }
                 }
+            }
+            if (_objectIndexTobeRemoved != -1)
+            {
+                _tempLocations.RemoveAt(_objectIndexTobeRemoved);
+                _objectIndexTobeRemoved = -1;
+                SaveChanges();
             }
             EditorGUILayout.EndScrollView();
 
@@ -700,12 +713,12 @@ namespace BookmarkEverything
                     EditorGUILayout.BeginVertical();
                     {
                         GUILayout.Space(4);
-                        EditorGUILayout.SelectableLabel(_tempLocations[i].Path, _textFieldStyle, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+                        EditorGUILayout.SelectableLabel(AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path), _textFieldStyle, GUILayout.Height(EditorGUIUtility.singleLineHeight));
                     }
                     EditorGUILayout.EndVertical();
                     if (DrawButton("", "ViewToolOrbit", ButtonTypes.Standard))
                     {
-                        pingedObject = AssetDatabase.LoadMainAssetAtPath(_tempLocations[i].Path);
+                        pingedObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path));
                         if (Selection.activeObject)
                         {
                             Selection.activeObject = null;
