@@ -71,6 +71,14 @@ namespace BookmarkEverything
             bool existsFile = File.Exists(value);
             return existsDir || existsFile;
         }
+        public static bool IsFolder(string value, ExistentialCheckStrategy strategy = ExistentialCheckStrategy.Path)
+        {
+             if (strategy == ExistentialCheckStrategy.GUID)
+            {
+                value = AssetDatabase.GUIDToAssetPath(value);
+            }
+            return Directory.Exists(value);
+        }
 
     }
 public enum ExistentialCheckStrategy // :)
