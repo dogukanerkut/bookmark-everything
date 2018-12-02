@@ -297,6 +297,14 @@ namespace BookmarkEverything
                                     }
                                 }
                                 _tempLocations.AddRange(duplicateList);
+                                if (_tabIndex == 0)
+                                {
+                                    SaveChanges();
+                                }
+                                // else if (_tabIndex == 1)
+                                // {
+                                //     _changesMade = true;
+                                // }
                             }
                             else
                             {
@@ -315,9 +323,17 @@ namespace BookmarkEverything
                                     }
                                 }
                                 _tempLocations.AddRange(allowedList);
+                                if (_tabIndex == 0)
+                                {
+                                    SaveChanges();
+                                }
+                                // else if (_tabIndex == 1)
+                                // {
+                                //     _changesMade = true;
+                                // }
                             }
                         }
-                        else
+                        else if(allowedList.Count > 0)
                         {
                             for (int i = 0; i < allowedList.Count; i++)
                             {
@@ -336,15 +352,16 @@ namespace BookmarkEverything
                             }
 
                             _tempLocations.AddRange(allowedList);
+                            if (_tabIndex == 0)
+                            {
+                                SaveChanges();
+                            }
+                            // else if (_tabIndex == 1)
+                            // {
+                            //     _changesMade = true;
+                            // }
                         }
-                        if (_tabIndex == 0)
-                        {
-                            SaveChanges();
-                        }
-                        else if(_tabIndex == 1)
-                        {
-                            _changesMade = true;
-                        }
+                       
                     }
                     break;
             }
@@ -995,6 +1012,7 @@ namespace BookmarkEverything
                     _lastlyAddedCount = -1;
                     _tempLocations.Clear();
                     _tempLocations.AddRange(EntryData.Clone(_currentSettings.EntryData.ToArray()));
+                    _changesMade  = false;
                 }
 
             }
