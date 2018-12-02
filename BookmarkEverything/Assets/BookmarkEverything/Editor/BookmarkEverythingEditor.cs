@@ -147,7 +147,7 @@ namespace BookmarkEverything
         }
 
         private void OnEnable() {
-            titleContent =RetrieveGUIContent("Bookmark", "UnityEditor.SceneHierarchyWindow");
+            titleContent =RetrieveGUIContent("Bookmark", "CustomSorting");
         }
 
         public void InitInternal()
@@ -647,9 +647,7 @@ namespace BookmarkEverything
             for (int i = 0; i < _currentSettings.EntryData.Count; i++)
             {
                 string path = AssetDatabase.GUIDToAssetPath(_currentSettings.EntryData[i].Path);
-                bool existsDir = Directory.Exists(path);
-                bool existsFile = File.Exists(path);
-                bool exists = existsDir || existsFile;
+                bool exists = IOHelper.Exists(path);
                 if (_currentSettings.EntryData[i].Category == category)
                 {
                     GUIContent content = exists ? ContentWithIcon(GetLastNameFromPath(path), path) : RetrieveGUIContent(GetLastNameFromPath(path) + "(File is removed, click to remove)" , "console.erroricon.sml");
@@ -708,14 +706,20 @@ namespace BookmarkEverything
             //Iterate all found entries - key is path value is type
             for (int i = 0; i < _tempLocations.Count; i++)
             {
+                bool exists = IOHelper.Exists(_tempLocations[i].Path, ExistentialCheckStrategy.GUID);
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUILayout.BeginVertical();
                     {
+                        string fullPath = exists ? AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path) : "(Removed)" + AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path);
                         GUILayout.Space(4);
-                        EditorGUILayout.SelectableLabel(AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path), _textFieldStyle, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+                        EditorGUILayout.SelectableLabel(fullPath, _textFieldStyle, GUILayout.Height(EditorGUIUtility.singleLineHeight));
                     }
                     EditorGUILayout.EndVertical();
+                    if (!exists)
+                    {
+                        GUI.enabled = false;
+                    }
                     if (DrawButton("", "ViewToolOrbit", ButtonTypes.Standard))
                     {
                         pingedObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(_tempLocations[i].Path));
@@ -746,7 +750,11 @@ namespace BookmarkEverything
                     _tempLocations[i].Index = EditorGUILayout.Popup(_tempLocations[i].Index, RetrieveGUIContent(_projectFinderHeaders), _popupStyle, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight));
 
                     _tempLocations[i].Category = _projectFinderHeaders[_tempLocations[i].Index];
-
+                   
+                    if (!exists)
+                    {
+                        GUI.enabled = true;
+                    }
                     //Remove Button
                     if (DrawButton("", "ol minus", ButtonTypes.Standard))
                     {

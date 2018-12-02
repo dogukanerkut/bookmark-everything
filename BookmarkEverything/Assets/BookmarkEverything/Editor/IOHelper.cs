@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace BookmarkEverything
@@ -59,5 +60,22 @@ namespace BookmarkEverything
                 }
             }
         }
+        
+        public static bool Exists(string value, ExistentialCheckStrategy strategy =  ExistentialCheckStrategy.Path)
+        {
+            if (strategy == ExistentialCheckStrategy.GUID)
+            {
+                value = AssetDatabase.GUIDToAssetPath(value);
+            }
+            bool existsDir = Directory.Exists(value);
+            bool existsFile = File.Exists(value);
+            return existsDir || existsFile;
+        }
+
     }
+public enum ExistentialCheckStrategy // :)
+{
+    Path,
+    GUID
+}
 }
