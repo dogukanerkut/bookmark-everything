@@ -8,7 +8,7 @@ using UnityEngine;
 using System.Text;
 using System.IO;
 
-namespace ProjectUtility
+namespace BookmarkEverything
 {
     public class BookmarkEverythingEditor : EditorWindow
     {
@@ -103,8 +103,8 @@ namespace ProjectUtility
 
             public void Save()
             {
-                ClearData(SETTINGS_FILENAME);
-                WriteToDisk(SETTINGS_FILENAME, this);
+                IOHelper.ClearData(SETTINGS_FILENAME);
+                IOHelper.WriteToDisk(SETTINGS_FILENAME, this);
             }
         }
 
@@ -264,7 +264,7 @@ namespace ProjectUtility
         private void LoadSettings()
         {
             //attempt to load the entries
-            _currentSettings = ReadFromDisk<Settings>(SETTINGS_FILENAME);
+            _currentSettings = IOHelper.ReadFromDisk<Settings>(SETTINGS_FILENAME);
             //if nothing is saved, retrieve the default values
             if (_currentSettings == null)
             {
@@ -455,61 +455,7 @@ namespace ProjectUtility
         }
         #endregion
 
-        #region IOHELPER
-        private static void WriteToDisk(string fileName, object serializeObject)
-        {
-            string str = JsonUtility.ToJson(serializeObject);
-            string path = Application.persistentDataPath + "/" + fileName + ".dat";
-            File.AppendAllText(path, str + Environment.NewLine);
-        }
-        private static T ReadFromDisk<T>(string fileName)
-        {
-            string path = Application.persistentDataPath + "/" + fileName + ".dat";
-            T returnObject = default(T);
-            if (File.Exists(path))
-            {
-                using (StreamReader streamReader = new StreamReader(path))
-                {
-                    string line;
-                    while (!string.IsNullOrEmpty(line = streamReader.ReadLine()))
-                    {
-                        returnObject = Deserialize<T>(line);
-                    }
-                }
-            }
-            return returnObject;
-        }
-        private static T Deserialize<T>(string text)
-        {
-            text = text.Trim();
-            Type typeFromHandle = typeof(T);
-            object obj = null;
-            try
-            {
-                obj = JsonUtility.FromJson<T>(text);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Cannot deserialize to type " + typeFromHandle.ToString() + ": " + ex.Message + ", Json string: " + text);
-            }
-            if (obj != null && obj.GetType() == typeFromHandle)
-            {
-                return (T)obj;
-            }
-            return default(T);
-        }
-        private static void ClearData(string fileName)
-        {
-            string path = Application.persistentDataPath + "/" + fileName + ".dat";
-            if (File.Exists(path))
-            {
-                using (FileStream fileStream = File.Open(path, FileMode.Open))
-                {
-                    fileStream.SetLength(0L);
-                }
-            }
-        }
-        #endregion
+        
 
         #endregion
 
