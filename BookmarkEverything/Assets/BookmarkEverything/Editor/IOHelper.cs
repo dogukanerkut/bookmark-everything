@@ -36,17 +36,25 @@ namespace BookmarkEverything
     {
         public static void WriteToDisk(string fileName, object serializeObject)
         {
-            string str = JsonUtility.ToJson(serializeObject);
             string path = Application.persistentDataPath + "/" + fileName + ".dat";
+#if UNITY_5_4_OR_NEWER
+			string str = JsonUtility.ToJson(serializeObject);
             File.AppendAllText(path, str + Environment.NewLine);
-        }
+#else
+			System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+			FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
+			bf.Serialize(fs, serializeObject);
+			fs.Close();
+#endif
+		}
         public static T ReadFromDisk<T>(string fileName)
         {
             string path = Application.persistentDataPath + "/" + fileName + ".dat";
             T returnObject = default(T);
             if (File.Exists(path))
             {
-                using (StreamReader streamReader = new StreamReader(path))
+#if UNITY_5_4_OR_NEWER
+				using (StreamReader streamReader = new StreamReader(path))
                 {
                     string line;
                     while (!string.IsNullOrEmpty(line = streamReader.ReadLine()))
@@ -54,10 +62,18 @@ namespace BookmarkEverything
                         returnObject = Deserialize<T>(line);
                     }
                 }
-            }
-            return returnObject;
+#else
+				FileStream fs = new FileStream(path, FileMode.Open);
+				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+				fs.Seek(0), SeekOrigin.Begin);
+				returnObject = (T)bf.Deserialize(fs);
+				fs.Close();
+#endif
+			}
+			return returnObject;
         }
-        private static T Deserialize<T>(string text)
+#if UNITY_5_4_OR_NEWER
+		private static T Deserialize<T>(string text)
         {
             text = text.Trim();
             Type typeFromHandle = typeof(T);
@@ -76,7 +92,8 @@ namespace BookmarkEverything
             }
             return default(T);
         }
-        public static void ClearData(string fileName)
+#endif
+		public static void ClearData(string fileName)
         {
             string path = Application.persistentDataPath + "/" + fileName + ".dat";
             if (File.Exists(path))

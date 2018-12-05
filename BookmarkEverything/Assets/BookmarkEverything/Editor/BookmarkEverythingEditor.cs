@@ -536,8 +536,12 @@ namespace BookmarkEverything
         {
             Texture2D t = new Texture2D(1, 1);
             Color c;
-            ColorUtility.TryParseHtmlString(htmlString, out c);
-            t.SetPixel(0, 0, c);
+#if UNITY_5_1
+			Color.TryParseHexString(htmlString, out c);
+#else
+			ColorUtility.TryParseHtmlString(htmlString, out c);
+#endif
+			t.SetPixel(0, 0, c);
             t.Apply();
             return t;
         }
@@ -549,8 +553,12 @@ namespace BookmarkEverything
         private Color CreateColor(string htmlString)
         {
             Color c;
-            ColorUtility.TryParseHtmlString(htmlString, out c);
-            return c;
+#if UNITY_5_1
+			Color.TryParseHexString(htmlString, out c);
+#else
+			ColorUtility.TryParseHtmlString(htmlString, out c);
+#endif
+			return c;
         }
 
         private void ConstructStyles()
@@ -608,16 +616,16 @@ namespace BookmarkEverything
                 _toolbarButtonStyle.alignment = TextAnchor.MiddleLeft;
             }
         }
-        #endregion
+#endregion
 
         
 
-        #endregion
+#endregion
 
 
-        #region ELEMENT DRAWERS
+#region ELEMENT DRAWERS
 
-        #region GUICONTENT
+#region GUICONTENT
 
         private GUIContent[] RetrieveGUIContent(string[] entries)
         {
@@ -650,9 +658,9 @@ namespace BookmarkEverything
                 return new GUIContent(name);
             }
         }
-        #endregion
+#endregion
 
-        #region BUTTON
+#region BUTTON
 
         private const float _standardButtonMaxWidth = 25;
         private const float _standardButtonMaxHeight = 18;
@@ -726,9 +734,9 @@ namespace BookmarkEverything
 
         }
 
-        #endregion
+#endregion
 
-        #region READ-ONLY TEXT FIELD
+#region READ-ONLY TEXT FIELD
 
         void ReadOnlyTextField(string label, string text)
         {
@@ -740,13 +748,13 @@ namespace BookmarkEverything
             EditorGUILayout.EndHorizontal();
         }
 
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
-        #region CONTENT
+#region CONTENT
 
-        #region MAIN HEADER DRAWERS
+#region MAIN HEADER DRAWERS
 
         private int _tabIndex = 0;
         private void DrawHeader()
@@ -1085,9 +1093,9 @@ namespace BookmarkEverything
             _currentSettings.Save();
             _changesMade = false;
         }
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
         private void DrawInnerSettings()
         {
