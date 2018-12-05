@@ -672,7 +672,7 @@ namespace BookmarkEverything
         private const float _bigButtonMaxHeight = 30;
         private bool DrawButton(string name, string iconName = "", string tooltip = "")
         {
-            if (iconName != null || iconName != "")
+            if (iconName != null && iconName != "")
             {
 
                 GUIContent c = new GUIContent(EditorGUIUtility.IconContent(iconName));
@@ -688,7 +688,7 @@ namespace BookmarkEverything
         }
         private bool DrawButton(string name, string iconName = "", params GUILayoutOption[] options)
         {
-            if (iconName != null || iconName != "")
+            if (iconName != null && iconName != "")
             {
 
                 GUIContent c = new GUIContent(EditorGUIUtility.IconContent(iconName));
@@ -723,7 +723,7 @@ namespace BookmarkEverything
                     break;
             }
 
-            if (iconName != null || iconName != "")
+            if (iconName != null && iconName != "")
             {
 
                 GUIContent c = new GUIContent(EditorGUIUtility.IconContent(iconName));
@@ -732,8 +732,7 @@ namespace BookmarkEverything
             }
             else
             {
-                Debug.LogError("Icon Name was null!");
-                return false;
+                return GUILayout.Button(name, options);
             }
 
 
@@ -1081,7 +1080,7 @@ namespace BookmarkEverything
                     SaveChanges();
                 }
                 EditorGUILayout.HelpBox("Changes are made, you should save changes if you want to keep them.", MessageType.Info);
-                if (DrawButton("Discard Changes", "TimeLineLoop", ButtonTypes.Standard))
+                if (DrawButton("Discard Changes", "", ButtonTypes.Standard))
                 {
                     _lastlyAddedCount = -1;
                     _tempLocations.Clear();
