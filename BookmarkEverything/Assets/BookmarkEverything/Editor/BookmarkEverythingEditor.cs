@@ -71,9 +71,10 @@ namespace BookmarkEverything
             }
             public EntryData(UnityEngine.Object obj)
             {
-                string guid = "";
-                long localId;
-                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out localId);
+				//use GetAssetPath+AssetPathToGUID instead of TryGetGUIDAndLocalFileIdentifier because that method is fairly new and not supported in many unity editors
+				string path = AssetDatabase.GetAssetPath(obj);
+				string guid = AssetDatabase.AssetPathToGUID(path);
+                //AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out localId);
 
                 GUID = guid;
                 if (obj.GetType() == typeof(DefaultAsset))
