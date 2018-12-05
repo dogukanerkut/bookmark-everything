@@ -829,6 +829,7 @@ namespace BookmarkEverything
         int _objectIndexToBeRemoved = -1;
         private void DrawProjectFinderEntries(string category)
         {
+			bool clicked = false;
             _projectFinderEntriesScroll = EditorGUILayout.BeginScrollView(_projectFinderEntriesScroll, _scrollViewStyle, GUILayout.MaxHeight(position.height));
             for (int i = 0; i < _currentSettings.EntryData.Count; i++)
             {
@@ -872,7 +873,7 @@ namespace BookmarkEverything
                                 EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(path));
                                 Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
                             }
-                            EditorUtility.FocusProjectWindow();
+							clicked = true;
                         }
                         else
                         {
@@ -885,9 +886,7 @@ namespace BookmarkEverything
                         _objectIndexToBeRemoved = i;
                     }
                    EditorGUILayout.EndHorizontal();
-
-
-                }
+				}
 
             }
             if (_objectIndexToBeRemovedDueToDeletedAsset != -1)
@@ -907,8 +906,13 @@ namespace BookmarkEverything
                 EditorGUILayout.LabelField("You can Drag&Drop assets from Project Folder and easily access them here.", _boldLabelStyle);
             }
             EditorGUILayout.EndScrollView();
-           
-        }
+			
+			//Older version of unity has issues with FocusProjectWindow being in the middle of the run(before EndXViews).
+			if (clicked)
+			{
+				EditorUtility.FocusProjectWindow();
+			}
+		}
 
         Vector2 _settingScrollPos;
         bool _changesMade = false;
