@@ -65,7 +65,7 @@ namespace BookmarkEverything
 #else
 				FileStream fs = new FileStream(path, FileMode.Open);
 				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-				fs.Seek(0), SeekOrigin.Begin);
+				fs.Seek(0, SeekOrigin.Begin);
 				returnObject = (T)bf.Deserialize(fs);
 				fs.Close();
 #endif
