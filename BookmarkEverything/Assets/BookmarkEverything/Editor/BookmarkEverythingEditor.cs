@@ -258,16 +258,21 @@ namespace BookmarkEverything
             DrawHeader();
 
             DropAreaGUI();
-            if (_autoClose && _reachedToAsset)
-            {
-                this.Close();
-            }
-            else if(!_autoClose && _reachedToAsset)
-            {
-                _reachedToAsset = false;
-            }
+            
         }
-        public void DropAreaGUI()
+		//Older versions of Unity doesn't like Close() being called in OnGUI
+		private void Update()
+		{
+			if (_autoClose && _reachedToAsset)
+			{
+				this.Close();
+			}
+			else if (!_autoClose && _reachedToAsset)
+			{
+				_reachedToAsset = false;
+			}
+		}
+		public void DropAreaGUI()
         {
             Event evt = Event.current;
             Rect drop_area = new Rect(0, 0, EditorGUIUtility.currentViewWidth, position.height);
