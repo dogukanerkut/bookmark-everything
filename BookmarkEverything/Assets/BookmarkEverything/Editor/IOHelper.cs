@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,11 +10,12 @@ namespace BookmarkEverything
     {
         public static void WriteToDisk(string fileName, object serializeObject)
         {
-            string path = Application.persistentDataPath + "/" + fileName + ".dat";
+
 #if UNITY_5_4_OR_NEWER
-			string str = JsonUtility.ToJson(serializeObject);
-            File.AppendAllText(path, str + Environment.NewLine);
+            string json = JsonUtility.ToJson(serializeObject);
+            StoreData(json);
 #else
+            string path = Application.persistentDataPath + "/" + fileName + ".dat";
 			System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 			FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
 			bf.Serialize(fs, serializeObject);
@@ -22,51 +24,64 @@ namespace BookmarkEverything
 		}
         public static T ReadFromDisk<T>(string fileName)
         {
+#if UNITY_5_4_OR_NEWER
+            var userData = GetStoredData();
+            return JsonUtility.FromJson<T>(userData);
+#else
             string path = Application.persistentDataPath + "/" + fileName + ".dat";
             T returnObject = default(T);
             if (File.Exists(path))
             {
-#if UNITY_5_4_OR_NEWER
-				using (StreamReader streamReader = new StreamReader(path))
-                {
-                    string line;
-                    while (!string.IsNullOrEmpty(line = streamReader.ReadLine()))
-                    {
-                        returnObject = Deserialize<T>(line);
-                    }
-                }
-#else
 				FileStream fs = new FileStream(path, FileMode.Open);
 				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 				fs.Seek(0, SeekOrigin.Begin);
 				returnObject = (T)bf.Deserialize(fs);
 				fs.Close();
-#endif
 			}
 			return returnObject;
-        }
-#if UNITY_5_4_OR_NEWER
-		private static T Deserialize<T>(string text)
-        {
-            text = text.Trim();
-            Type typeFromHandle = typeof(T);
-            object obj = null;
-            try
-            {
-                obj = JsonUtility.FromJson<T>(text);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Cannot deserialize to type " + typeFromHandle.ToString() + ": " + ex.Message + ", Json string: " + text);
-            }
-            if (obj != null && obj.GetType() == typeFromHandle)
-            {
-                return (T)obj;
-            }
-            return default(T);
-        }
 #endif
-		public static void ClearData(string fileName)
+        }
+
+        static void StoreData(string bookmarkData)
+        {
+            var dir = GetDataPath();
+            var imp = AssetImporter.GetAtPath(dir);
+            imp.userData = bookmarkData;
+            imp.SaveAndReimport();
+        }
+
+        static string GetStoredData()
+        {
+            var dir = GetDataPath();
+            var imp = AssetImporter.GetAtPath(dir);
+            return imp.userData;
+        }
+
+        static string GetDataPath()
+        {
+            var path = AssetDatabase.FindAssets("BookmarkEverything")
+                .ToList()
+                .ConvertAll(p => AssetDatabase.GUIDToAssetPath(p))
+                .Where(file => Directory.Exists(file))
+                .FirstOrDefault();
+            return path;
+        }
+
+
+#if UNITY_5_4_OR_NEWER
+        /// <summary>
+        /// filename arg kept in newer version to ensure compatibility with older builds
+        /// </summary>
+        /// <param name="fileName"></param>
+        public static void ClearData(string fileName)
+        {
+            var dir = GetDataPath();
+            var imp = AssetImporter.GetAtPath(dir);
+            imp.userData = string.Empty;
+            imp.SaveAndReimport();
+        }
+#else
+        public static void ClearData(string fileName)
         {
             string path = Application.persistentDataPath + "/" + fileName + ".dat";
             if (File.Exists(path))
@@ -77,6 +92,7 @@ namespace BookmarkEverything
                 }
             }
         }
+#endif
         
         public static bool Exists(string value, ExistentialCheckStrategy strategy =  ExistentialCheckStrategy.Path)
         {
