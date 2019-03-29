@@ -469,7 +469,11 @@ namespace BookmarkEverything
                 case "unity":
                     return "SceneAsset Icon";
                 case "prefab":
+#if UNITY_2018_3_OR_NEWER
+                    return "d_Prefab Icon";
+                        #else
                     return "PrefabNormal Icon";
+#endif
                 case "mat":
                     return "Material Icon";
                 case "cs":
